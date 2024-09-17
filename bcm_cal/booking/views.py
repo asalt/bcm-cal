@@ -21,6 +21,13 @@ def available_slots_week(request):
         selected_date = datetime.strptime(selected_date_str, "%Y-%m-%d").date()
     else:
         selected_date = date.today()
+    today = date.today()
+    if (
+        selected_date.year <= today.year
+        and selected_date.month <= today.month
+        and selected_date.day < today.day
+    ):
+        selected_date = today
     print(selected_date)
     selected_date += timedelta(weeks=week_offset)
     print(selected_date)

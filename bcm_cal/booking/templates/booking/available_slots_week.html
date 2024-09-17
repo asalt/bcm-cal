@@ -11,7 +11,7 @@
         <!--</div>-->
         <!-- Month Navigation -->
         <div class="d-flex justify-content-between mb-3">
-            <a href="?date={{ prev_month_date|date:'Y-m-d' }}" class="btn btn-secondary">&laquo; Previous Month</a>
+            <a href="?date={{ prev_month_date|date:'Y-m-d' }}" class="btn btn-secondary{% if prev_month_date.month < today.month  and prev_month_date.year <= today.year %} disabled{%endif%}">&laquo; Previous Month</a>
             <a href="?date={{ next_month_date|date:'Y-m-d' }}" class="btn btn-secondary">Next Month &raquo;</a>
         </div>
         <h3>{{ selected_date|date:"F Y" }}</h3>

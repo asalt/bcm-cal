@@ -1,0 +1,96 @@
+{% extends 'booking/base.html' %}
+
+{% block content %}
+<div class="row">
+    <!-- Month Calendar Column -->
+    <div class="col-md-4">
+        <!-- Month Navigation -->
+        <!--<div class="d-flex justify-content-between mb-6">-->
+        <!--    <a href="?date={{ prev_month_date|date:'Y-m-d' }}" class="btn btn-primary">&laquo; Previous Month</a>-->
+        <!--    <a href="?date={{ next_month_date|date:'Y-m-d' }}" class="btn btn-primary">Next Month &raquo;</a>-->
+        <!--</div>-->
+        <!-- Month Navigation -->
+        <div class="d-flex justify-content-between mb-3">
+            <a href="?date={{ prev_month_date|date:'Y-m-d' }}" class="btn btn-secondary">&laquo; Previous Month</a>
+            <a href="?date={{ next_month_date|date:'Y-m-d' }}" class="btn btn-secondary">Next Month &raquo;</a>
+        </div>
+        <h3>{{ selected_date|date:"F Y" }}</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    {% for day_name in day_names %}
+                        <th>{{ day_name }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for week in month_days %}
+                <tr>
+                    {% for day in week %}
+                    <td
+                        {% if day == today %}class="table-primary"{% endif %}
+                        {% if day.month != selected_date.month %}class="text-muted"{% endif %}
+                        {% if day >= today %}
+                           {% if day >= start_of_week and day <= end_of_week %}
+                                    class="selected-week"
+                                {% endif %}
+                            >
+                            <a href="?date={{ day|date:'Y-m-d' }}">{{ day.day }}</a>
+                        {% else %}
+                            >
+                            <span class="text-muted">{{ day.day }}</span>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Week View Column -->
+    <div class="col-md-8">
+        <h2>Available Slots for Week: {{ start_of_week|date:'Y-m-d' }} to {{ end_of_week|date:'Y-m-d' }}</h2>
+
+        <!-- Week Navigation -->
+        <div class="d-flex justify-content-between mb-3">
+            <a href="?date={{ prev_week_date|date:'Y-m-d' }}" class="btn btn-primary">&laquo; Previous Week</a>
+            <a href="?date={{ next_week_date|date:'Y-m-d' }}" class="btn btn-primary">Next Week &raquo;</a>
+        </div>
+
+        <!-- Display Slots in a Table -->
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Time Slot</th>
+                    {% for day in week_slots.keys %}
+                        <th {% if day == today %}class="table-primary"{% endif %}>{{ day|date:'D, M d' }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for slot in time_slots %}
+                <tr>
+                    <td>{{ slot|time:'H:i' }}</td>
+                    {% for day, slots in week_slots.items %}
+                    <td>
+                        {% if slot in slots and day >= today %}
+                        <form action="{% url 'book_slot' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}">
+                            <input type="hidden" name="time_slot" value="{{ slot|time:'H:i:s' }}">
+                            <button type="submit" class="btn btn-success btn-sm">Book</button>
+                        </form>
+                        {% else %}
+                            <span class="text-muted">{% if day < today %}N/A{% else %}Booked{% endif %}</span>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

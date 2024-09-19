@@ -1,0 +1,22 @@
+
+{% extends 'booking/base.html' %}
+
+{% block content %}
+
+
+{% if projects %}
+{% for project in projects %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">{{ project.name }}</h5>
+            <p class="card-text">{{ project.description }}</p>
+            <a href="{% url 'project_detail' project.project_number %}" class="btn btn-primary">View Project</a>
+        </div>
+    </div>
+{% endfor %}
+
+{% else %}
+<p>You have no projects.</p>
+{% endif %}
+<a href="{% url 'create_project' %}" class="btn btn-primary">Create New Project</a>
+{% endblock %}

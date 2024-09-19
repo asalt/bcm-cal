@@ -14,24 +14,17 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
 from booking import views as booking_views
-from django.views.generic import RedirectView 
+from django.views.generic import RedirectView
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
+    path("booking/", include("booking.urls")),
+    path("accounts/", include("django.contrib.auth.urls")),  # For authentication
+    path("accounts/signup/", booking_views.signup, name="signup"),
 ]
-
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('booking/', include('booking.urls')),
-    path('accounts/', include('django.contrib.auth.urls')),  # For authentication
-    path('accounts/', include('django.contrib.auth.urls')),
-    path('accounts/signup/', booking_views.signup, name='signup'),  # Add this line
-    path('', RedirectView.as_view(url='booking/available_slots/')),  # Redirect root to available_slots
-]
-

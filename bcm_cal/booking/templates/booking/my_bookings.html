@@ -10,15 +10,23 @@
             <th>Date</th>
             <th>Time Slot</th>
             <th>Booked On</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
         {% for booking in bookings %}
-        <tr>
-            <td>{{ booking.date }}</td>
-            <td>{{ booking.time_slot }}</td>
-            <td>{{ booking.created_at|date:"Y-m-d H:i" }}</td>
-        </tr>
+            <tr>
+                <td>{{ booking.date }}</td>
+                <td>{{ booking.time_slot }}</td>
+                <td>{{ booking.created_at|date:"Y-m-d H:i" }}</td>
+                <td>
+                    <form action="{% url 'cancel_booking' %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                    <button type="submit" class="btn btn-danger">Delete </button>
+                    </form>
+                </td>
+            </tr>
         {% endfor %}
     </tbody>
 </table>

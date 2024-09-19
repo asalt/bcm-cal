@@ -1,14 +1,23 @@
 {% extends 'booking/base.html' %}
 
 {% block content %}
+
+<h2>Select a Project</h2>
+<form method="get" action="">
+    <select name="project_number" id="project-select" class="form-control">
+        <option value="">-- Select Project --</option>
+        {% for project in projects %}
+        <option value="{{ project.project_number }}" {% if project.project_number|stringformat:"s" == project_number|stringformat:"s" %}selected{% endif %}>{{ project.name }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary mt-2">Select Project</button>
+</form>
+
+<br>
+
 <div class="row">
     <!-- Month Calendar Column -->
     <div class="col-md-4">
-        <!-- Month Navigation -->
-        <!--<div class="d-flex justify-content-between mb-6">-->
-        <!--    <a href="?date={{ prev_month_date|date:'Y-m-d' }}" class="btn btn-primary">&laquo; Previous Month</a>-->
-        <!--    <a href="?date={{ next_month_date|date:'Y-m-d' }}" class="btn btn-primary">Next Month &raquo;</a>-->
-        <!--</div>-->
         <!-- Month Navigation -->
         <div class="d-flex justify-content-between mb-3">
             <a href="?date={{ prev_month_date|date:'Y-m-d' }}" class="btn btn-secondary{% if prev_month_date.month < today.month  and prev_month_date.year <= today.year %} disabled{%endif%}">&laquo; Previous Month</a>
@@ -28,29 +37,33 @@
                 <tr>
                     {% for day in week %}
                     <td
-                        {% if day == today %}class="table-primary"{% endif %}
-                        {% if day.month != selected_date.month %}class="text-muted"{% endif %}
+                        class="
+                            {% if day.month != selected_date.month %}text-muted {% endif %}
+                            {% if day >= start_of_week and day <= end_of_week %}selected-week {% endif %}
+                            {% if day == today %}table-primary {% endif %}
+                        ">
                         {% if day >= today %}
-                           {% if day >= start_of_week and day <= end_of_week %}
-                                    class="selected-week"
-                                {% endif %}
-                            >
                             <a href="?date={{ day|date:'Y-m-d' }}">{{ day.day }}</a>
                         {% else %}
-                            >
                             <span class="text-muted">{{ day.day }}</span>
                         {% endif %}
                     </td>
                     {% endfor %}
                 </tr>
                 {% endfor %}
+                </td>
             </tbody>
         </table>
+        <!-- Month Navigation -->
+        <div class="d-flex justify-content-between mb-3">
+            <a href="?date={{ prev_month_date|date:'Y-m-d' }}" class="btn btn-secondary{% if prev_month_date.month < today.month  and prev_month_date.year <= today.year %} disabled{%endif%}">&laquo; Previous Month</a>
+            <a href="?date={{ next_month_date|date:'Y-m-d' }}" class="btn btn-secondary">Next Month &raquo;</a>
+        </div>
     </div>
 
     <!-- Week View Column -->
     <div class="col-md-8">
-        <h2>Available Slots for Week: {{ start_of_week|date:'Y-m-d' }} to {{ end_of_week|date:'Y-m-d' }}</h2>
+        <h3>Available Slots for Week: {{ start_of_week|date:'Y-m-d' }} to {{ end_of_week|date:'Y-m-d' }}</h2>
 
         <!-- Week Navigation -->
         <div class="d-flex justify-content-between mb-3">
@@ -58,39 +71,70 @@
             <a href="?date={{ next_week_date|date:'Y-m-d' }}" class="btn btn-primary">Next Week &raquo;</a>
         </div>
 
+    <form action="{% url 'book_slots' %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="project_number" value="{{ project.project_number }}">
+
+
         <!-- Display Slots in a Table -->
         <table class="table table-bordered">
             <thead>
                 <tr>
-                    <th>Time Slot</th>
-                    {% for day in week_slots.keys %}
-                        <th {% if day == today %}class="table-primary"{% endif %}>{{ day|date:'D, M d' }}</th>
-                    {% endfor %}
+                <th>Time Slot</th>
+                {% for day in week_slots.0.days %}
+                    <th {% if day.date == today %}class="table-primary"{% endif %}>{{ day.date|date:"D, M d" }}</th>
+                {% endfor %}
                 </tr>
             </thead>
             <tbody>
-                {% for slot in time_slots %}
-                <tr>
-                    <td>{{ slot|time:'H:i' }}</td>
-                    {% for day, slots in week_slots.items %}
-                    <td>
-                        {% if slot in slots and day >= today %}
-                        <form action="{% url 'book_slot' %}" method="post">
-                            {% csrf_token %}
-                            <input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}">
-                            <input type="hidden" name="time_slot" value="{{ slot|time:'H:i:s' }}">
-                            <button type="submit" class="btn btn-success btn-sm">Book</button>
-                        </form>
+
+            {% for slot in week_slots %}
+            <tr>
+                <!-- Display the Time Slot -->
+                <td>{{ slot.time }}</td>
+
+                <!-- Iterate Over Each Day's Slot Info -->
+                {% for day in slot.days %}
+                    <td class="{{ day.class }}">
+                        {% if day.status == "available" and day.date > today %}
+                            <!-- Booking Form for Available Slots -->
+                            <form action="{% url 'book_slot' %}" method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="date" value="{{ day.date|date:"Y-m-d" }}">
+                                <input type="hidden" name="time_slot" value="{{ slot.time }}:00">
+                                <input type="hidden" name="project_number" value="{{ project.project_number }}">
+                                <button type="submit" class="btn btn-sm btn-success">Book</button>
+                            </form>
                         {% else %}
-                            <span class="text-muted">{% if day < today %}N/A{% else %}Booked{% endif %}</span>
+                            <!-- Status Messages -->
+                            {% if day.date <= today %}
+                                <span class="text-muted">N/A</span>
+                            {% else %}
+                                <span class="text-danger">Booked</span>
+                            {% endif %}
                         {% endif %}
                     </td>
-                    {% endfor %}
-                </tr>
                 {% endfor %}
+            </tr>
+            {% endfor %}
             </tbody>
         </table>
+        </form>
+
+        <!-- Week Navigation -->
+        <div class="d-flex justify-content-between mb-3">
+            <a href="?date={{ prev_week_date|date:'Y-m-d' }}" class="btn btn-primary">&laquo; Previous Week</a>
+            <a href="?date={{ next_week_date|date:'Y-m-d' }}" class="btn btn-primary">Next Week &raquo;</a>
+        </div>
+
     </div>
 </div>
+
+<br>
+</div>>
+
+
+
+
 {% endblock %}
 
